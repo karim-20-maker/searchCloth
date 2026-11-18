@@ -28,12 +28,14 @@ a{color:inherit;text-decoration:none}.msg{text-align:center;padding:20px;color:#
 <div id="out"></div>
 </main>
 <script>
+// بعد ما تعمل الـ Worker حط لينكه هنا (من غير / في الآخر). سيبه فاضي لو بتشغل server.py محلي.
+const API_BASE="";
+const COUNTRIES={ca:"كندا",us:"أمريكا",gb:"بريطانيا",ae:"الإمارات",sa:"السعودية",eg:"مصر",de:"ألمانيا",fr:"فرنسا",it:"إيطاليا",es:"إسبانيا",tr:"تركيا",au:"أستراليا",nl:"هولندا",qa:"قطر",kw:"الكويت"};
 const $=id=>document.getElementById(id), kinds={outlet:"أوتليت",brand:"متجر الماركة",store:"متجر"};
-fetch("/api/countries").then(r=>r.json()).then(d=>{
-  $("c").innerHTML=Object.entries(d).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
-  $("c").value="ca";});
+$("c").innerHTML=Object.entries(COUNTRIES).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
+$("c").value="ca";
 $("f").onsubmit=async e=>{e.preventDefault();$("out").innerHTML='<div class="msg">بدوّر...</div>';
-  const r=await fetch(`/api/search?q=${encodeURIComponent($("q").value)}&country=${$("c").value}`);
+  const r=await fetch(`${API_BASE}/api/search?q=${encodeURIComponent($("q").value)}&country=${$("c").value}`);
   const d=await r.json();
   if(d.error){$("out").innerHTML=`<div class="msg">${d.error}</div>`;return}
   if(!d.results.length){$("out").innerHTML='<div class="msg">مفيش نتايج، جرّب اسم تاني</div>';return}
