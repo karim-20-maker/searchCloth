@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>صيّاد الأسعار</title>
+<style>
+*{box-sizing:border-box}body{font-family:system-ui,Tahoma,sans-serif;margin:0;background:#f4f5f7;color:#1a1a1a}
+header{background:#111;color:#fff;padding:18px;text-align:center;font-size:20px;font-weight:700}
+main{max-width:760px;margin:auto;padding:14px}
+form{display:flex;gap:8px;flex-wrap:wrap;background:#fff;padding:12px;border-radius:12px}
+input,select,button{font-size:16px;padding:12px;border-radius:8px;border:1px solid #ccc}
+input{flex:1 1 100%}select{flex:1}button{background:#0a7d4f;color:#fff;border:0;font-weight:700;flex:1}
+.best{background:#e7f8ee;border:2px solid #0a7d4f}
+.card{display:flex;gap:10px;background:#fff;border-radius:12px;padding:12px;margin-top:10px;align-items:center}
+.card img{width:64px;height:64px;object-fit:contain}.info{flex:1;min-width:0}
+.t{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s{font-size:13px;color:#555;margin-top:4px}.p{font-size:20px;font-weight:800;direction:ltr;text-align:left}
+.old{text-decoration:line-through;color:#999;font-size:13px;font-weight:400}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;margin-inline-start:6px;background:#eee}
+.outlet{background:#ffe9c7}.brand{background:#d9e8ff}
+a{color:inherit;text-decoration:none}.msg{text-align:center;padding:20px;color:#666}
+</style></head><body>
+<header>🛍️ صيّاد الأسعار</header>
+<main>
+<form id="f">
+<input id="q" placeholder="اسم المنتج، مثال: Ralph Lauren jacket" required>
+<select id="c"></select><button>دوّر</button>
+</form>
+<div id="out"></div>
+</main>
+<script>
+const $=id=>document.getElementById(id), kinds={outlet:"أوتليت",brand:"متجر الماركة",store:"متجر"};
+fetch("/api/countries").then(r=>r.json()).then(d=>{
+  $("c").innerHTML=Object.entries(d).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
+  $("c").value="ca";});
+$("f").onsubmit=async e=>{e.preventDefault();$("out").innerHTML='<div class="msg">بدوّر...</div>';
+  const r=await fetch(`/api/search?q=${encodeURIComponent($("q").value)}&country=${$("c").value}`);
+  const d=await r.json();
+  if(d.error){$("out").innerHTML=`<div class="msg">${d.error}</div>`;return}
+  if(!d.results.length){$("out").innerHTML='<div class="msg">مفيش نتايج، جرّب اسم تاني</div>';return}
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const safe=u=>/^https?:\/\//.test(u)?u:"#";
+  $("out").innerHTML=(d.demo?'<div class="msg">⚠️ بيانات تجريبية (حط SERPAPI_KEY للأسعار الحقيقية)</div>':"")+
+  d.results.map((x,i)=>`<a class="card ${i==0?"best":""}" href="${safe(x.link)}" target="_blank" rel="noopener">
+   ${x.image?`<img src="${safe(x.image)}">`:""}
+   <div class="info"><div class="t">${i==0?"🏆 الأرخص: ":""}${esc(x.title)}</div>
+   <div class="s">${esc(x.store)}<span class="tag ${x.kind}">${kinds[x.kind]}</span>${esc(x.delivery||"")}</div></div>
+   <div class="p">${esc(x.price_text)}${x.old_price?`<div class="old">${x.old_price}</div>`:""}</div></a>`).join("");};
+</script></body></html>
